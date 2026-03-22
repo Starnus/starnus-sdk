@@ -3,6 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/starnus.svg)](https://pypi.org/project/starnus/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-starnus.com%2Fdocs-blue)](https://starnus.com/docs)
 
 The official Python SDK for the [Starnus AI platform](https://starnus.com).
 
@@ -58,14 +59,16 @@ Get your API key from the [Starnus dashboard](https://app.starnus.com) under **D
 
 ## Documentation
 
-Full SDK reference: [starnus.com/docs](https://starnus.com/docs)
+**→ [starnus.com/docs](https://starnus.com/docs)**
 
-Includes:
+Full SDK and API reference hosted on the Starnus website. Includes:
+
 - All resource methods with parameters and return types
 - WebSocket streaming event reference
 - File upload, artifact export, and trigger examples
 - CLI reference
 - Error handling guide
+- API reference with live Swagger UI
 
 ## Resources
 
