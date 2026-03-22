@@ -38,7 +38,7 @@ from pathlib import Path
 # ─── Config ───────────────────────────────────────────────────────────────────
 
 API_KEY  = os.environ.get("STARNUS_API_KEY", "")
-BASE_URL = os.environ.get("STARNUS_BASE_URL", "https://nzvw2hkqh0.execute-api.eu-central-1.amazonaws.com/v1")
+BASE_URL = os.environ.get("STARNUS_BASE_URL", "https://api.starnus.com/v1")
 WS_URL   = os.environ.get("STARNUS_WS_URL",  "wss://0vxd7s295f.execute-api.eu-central-1.amazonaws.com/prod")
 
 if not API_KEY:

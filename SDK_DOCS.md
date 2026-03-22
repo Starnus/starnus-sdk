@@ -2,7 +2,7 @@
 
 **Package:** `starnus` · **Language:** Python 3.9+ · **License:** MIT
 
-The official Python SDK for the [Starnus Public API](https://nzvw2hkqh0.execute-api.eu-central-1.amazonaws.com/v1). Run AI-powered agentic tasks, stream live results over WebSocket, manage projects, upload files, export artifacts, and more — all from Python or the command line.
+The official Python SDK for the [Starnus Public API](https://api.starnus.com/v1). Run AI-powered agentic tasks, stream live results over WebSocket, manage projects, upload files, export artifacts, and more — all from Python or the command line.
 
 ---
 
@@ -100,7 +100,7 @@ from starnus import Starnus
 
 client = Starnus(
     api_key="sk_live_your_api_key_here",   # optional if env var set
-    base_url="https://nzvw2hkqh0.execute-api.eu-central-1.amazonaws.com/v1",  # optional override
+    base_url="https://api.starnus.com/v1",  # optional override
     ws_url="wss://0vxd7s295f.execute-api.eu-central-1.amazonaws.com/prod",    # optional override
 )
 ```
@@ -1235,4 +1235,4 @@ for event in execution.stream():
 
 ---
 
-*For REST API documentation, see the [API Reference](https://nzvw2hkqh0.execute-api.eu-central-1.amazonaws.com/v1/openapi.json) or the interactive [Swagger UI](https://petstore.swagger.io/?url=https://nzvw2hkqh0.execute-api.eu-central-1.amazonaws.com/v1/openapi.json).*
+*For REST API documentation, see the [API Reference](https://api.starnus.com/v1/openapi.json) or the interactive [Swagger UI](https://petstore.swagger.io/?url=https://api.starnus.com/v1/openapi.json).*
