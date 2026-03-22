@@ -13,8 +13,6 @@ jobs:
   build-and-publish:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
-    environment: pypi  # matches the environment name set on PyPI trusted publisher
-
     steps:
       - uses: actions/checkout@v4
 
