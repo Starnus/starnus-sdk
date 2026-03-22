@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+pip-wheel-metadata/
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+
+# Test logs — contain live API responses and may include sensitive runtime data
+tests/*.json
+tests/*.xlsx
+tests/*.csv
+tests/*.pdf
+tests/sdk_test_upload.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Secrets — never commit these
+.env
+.env.*
+*.pem
+*.key
+config.json
+~/.starnus/
+
+# Component subsystem — lives in a separate private repo (starnus-component-sdk)
+starnus_sdk/component/
