@@ -147,7 +147,7 @@ print(me.email)            # "john.doe@acmecorp.com"
 print(me.first_name)       # "John"
 print(me.last_name)        # "Doe"
 print(me.credits_remained) # 179305.0
-print(me.plan)             # "pro"
+print(me.tier)             # "pro"
 ```
 
 ### `client.profile.update(...)` → `Profile`
@@ -180,7 +180,7 @@ updated = client.profile.update(
 | `email` | `str` | Account email address |
 | `first_name` | `str` | First name |
 | `last_name` | `str` | Last name |
-| `plan` | `str` | Current subscription plan |
+| `tier` | `str` | Current subscription plan (`free`, `trial`, `pro monthly`, `pro+ monthly`, `ultra monthly`, and yearly variants) |
 | `credits_remained` | `float` | Credits remaining in current period |
 | `bio` | `str` | Profile bio |
 | `phone` | `str` | Phone number |
@@ -233,11 +233,24 @@ updated = client.projects.update(
 client.projects.delete("a1b2c3d4-...")
 ```
 
+### Space Types
+
+Every project belongs to one of two space types, which you can identify from its `id`:
+
+| `space_type` property | `id` prefix | Description |
+|-----------------------|-------------|-------------|
+| `"free"` | Regular UUID | A standard project — you drive all prompts and tasks. Created via `client.projects.create()`. |
+| `"autopilot_outbound"` | `auto_outbound_<uuid>` | An AI-managed outbound campaign with a 4-week generated plan, autonomous goal execution, and a recurring Weekly Progress Report every Monday at 00:01 local time. Created from the platform dashboard only. |
+| `"autopilot_inbound"` | `auto_inbound_<uuid>` | Reserved for future AI-managed inbound workflows. |
+
+> `client.projects.create()` always creates a **Free Space**. Autopilot Spaces are created from the Starnus dashboard and are fully readable/writable via the API.
+
 ### `Project` object fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | `str` | Unique project ID |
+| `space_type` | `str` | Computed by the SDK: `"free"`, `"autopilot_outbound"`, or `"autopilot_inbound"` |
 | `name` | `str` | Project name |
 | `description` | `str` | Project description |
 | `created_at` | `str` | Creation timestamp (ISO 8601) |
@@ -248,6 +261,9 @@ client.projects.delete("a1b2c3d4-...")
 ## 6. Executions — AI Tasks via WebSocket
 
 Executions are the core feature: send a natural-language prompt to the Starnus AI supervisor, which autonomously plans and executes multi-agent tasks. Results stream back in real time over WebSocket.
+
+> **Quick access via `client.executions`:** In addition to the top-level `client.execute()` shortcut, the `client.executions` resource exposes `client.executions.create()` with the same signature. Both are equivalent.
+
 
 ### How it works
 
@@ -522,7 +538,7 @@ client.files.download("file_abc123", local_path="./downloaded.pdf")
 
 ## 8. Artifacts
 
-Artifacts are structured outputs produced by AI agents: databases (tables), documents, spreadsheets, and code files.
+Artifacts are structured outputs produced by AI agents: databases (tables), documents (markdown/rich text), and images.
 
 ### `client.artifacts.list(project_id=None, type=None, limit=50)` → `List[Artifact]`
 
@@ -547,6 +563,8 @@ print(len(artifact.rows)) # 10
 Create an artifact manually:
 
 ```python
+# columns: list of column name strings
+# rows: list of rows, each row is a plain list of values in column order
 artifact = client.artifacts.create(
     name="ACME Contacts",
     type="database",
@@ -558,6 +576,14 @@ artifact = client.artifacts.create(
         ["Jane Smith", "TechCorp NL", "jane@techcorp.nl", "+31698765432"],
     ],
 )
+
+# For document artifacts use content= instead of columns/rows
+doc = client.artifacts.create(
+    name="Campaign Summary",
+    type="document",
+    project_id="a1b2c3d4-...",
+    content="## Q1 Summary\n\nAll targets met.",
+)
 ```
 
 **Artifact types:**
@@ -566,8 +592,7 @@ artifact = client.artifacts.create(
 |------|-------------|
 | `database` | Structured table with columns and rows |
 | `document` | Free-form markdown or rich text |
-| `spreadsheet` | Spreadsheet-style data |
-| `code` | Source code artifact |
+| `image` | Image file (stored in S3, accessed via `download_url`) |
 
 ### `client.artifacts.export(artifact_id, format, path=None)` → `bytes | None`
 
@@ -610,7 +635,7 @@ client.artifacts.delete("art_abc123")
 |-------|------|-------------|
 | `id` | `str` | Unique artifact ID |
 | `name` | `str` | Artifact name |
-| `type` | `str` | `database` / `document` / `spreadsheet` / `code` |
+| `type` | `str` | `database` / `document` / `image` |
 | `description` | `str` | Description |
 | `columns` | `List[str]` | Column names (database type) |
 | `rows` | `List[List]` | Row data (database type) |
@@ -671,7 +696,7 @@ Tasks are simple to-do items within a project. These are distinct from AI execut
 ```python
 tasks = client.tasks.list(project_id="a1b2c3d4-...")
 # Filter by status
-pending = client.tasks.list(project_id="a1b2c3d4-...", status="pending")
+created = client.tasks.list(project_id="a1b2c3d4-...", status="created")
 ```
 
 ### `client.tasks.create(description, project_id, ...)` → `Task`
@@ -708,7 +733,7 @@ client.tasks.delete("goal_20260322_...", project_id="a1b2c3d4-...")
 |-------|------|-------------|
 | `id` | `str` | Task ID |
 | `description` | `str` | Task description |
-| `status` | `str` | `pending` / `in_progress` / `done` |
+| `status` | `str` | `created` (queued) / `in_progress` / `done` |
 | `due_date` | `str` | Due date (ISO 8601 date) |
 | `project_id` | `str` | Owning project |
 | `created_at` | `str` | Creation timestamp |
@@ -779,10 +804,8 @@ client.integrations.remove_email("outreach@acmecorp.com")
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | `str` | Integration identifier (e.g. `"gmail"`, `"linkedin"`) |
-| `display_name` | `str` | Human-readable name |
+| `name` | `str` | Integration identifier (e.g. `"gmail"`, `"linkedin"`, `"instagram"`) |
 | `connected` | `bool` | Whether currently connected |
-| `category` | `str` | Integration category |
 
 ---
 
@@ -817,7 +840,7 @@ trigger = client.triggers.create(
     description="Process incoming CRM data and update artifacts",
     webhook=True,
 )
-print(trigger.webhook_url)  # POST to this URL to trigger execution
+print(trigger.id)  # Trigger UUID — fire via POST /v1/triggers/{id}/fire
 ```
 
 **Schedule examples:**
@@ -832,18 +855,20 @@ print(trigger.webhook_url)  # POST to this URL to trigger execution
 ### `client.triggers.delete(trigger_id)` → `None`
 
 ```python
-client.triggers.delete("sched_abc123")
+client.triggers.delete("a3f7b2e1-9d4c-4a1e-8b5f-123456789abc")
 ```
 
 ### `Trigger` object fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `str` | Trigger ID |
+| `id` | `str` | Trigger UUID |
 | `description` | `str` | What the trigger does |
-| `schedule` | `str` | Human-readable schedule |
-| `webhook_url` | `str` | Webhook endpoint URL (webhook triggers only) |
+| `type` | `str` | `"webhook"` — all triggers are webhook-based |
+| `schedule` | `str` | Human-readable schedule (if set) |
 | `active` | `bool` | Whether the trigger is active |
+| `last_run` | `str` | ISO 8601 timestamp of the most recent execution (if any) |
+| `next_run` | `str` | ISO 8601 timestamp of the next scheduled run (if any) |
 | `created_at` | `str` | Creation timestamp (ISO 8601) |
 
 ---
@@ -857,7 +882,7 @@ Inspect your plan, credit balance, invoices, and manage your subscription.
 ```python
 balance = client.billing.balance()
 print(balance.credits_remaining)  # 179305.0
-print(balance.plan)               # "pro"
+print(balance.tier)               # "pro monthly"
 ```
 
 ### `client.billing.plans(currency="eur")` → `List[Plan]`
@@ -890,7 +915,7 @@ print(checkout.url)  # Redirect user to this Stripe URL
 Upgrade an existing subscription:
 
 ```python
-client.billing.upgrade(plan="enterprise")
+client.billing.upgrade(plan="ultra")
 ```
 
 ### `client.billing.cancel()` → `None`
@@ -917,10 +942,11 @@ Inspect your API usage for the current billing period.
 
 ```python
 usage = client.usage.get()
-print(usage.executions_count)   # 47
-print(usage.credits_used)       # 820.5
-print(usage.period_start)       # "2026-03-01"
-print(usage.period_end)         # "2026-03-31"
+print(usage.credits_consumed)  # 820.5
+print(usage.credits_limit)     # 200000.0
+print(usage.request_count)     # 47
+print(usage.period_start)      # "2026-03-01"
+print(usage.period_end)        # "2026-03-31"
 ```
 
 ### `client.usage.current()` → `UsageSummary`
@@ -933,10 +959,12 @@ usage = client.usage.current()
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `executions_count` | `int` | Number of executions this period |
-| `credits_used` | `float` | Credits consumed this period |
+| `credits_consumed` | `float` | Credits consumed this period |
+| `credits_limit` | `float` | Total credits available for the period |
+| `request_count` | `int` | Number of API requests made this period |
 | `period_start` | `str` | Billing period start (ISO 8601 date) |
 | `period_end` | `str` | Billing period end (ISO 8601 date) |
+| `breakdown` | `list` | Per-endpoint credit breakdown |
 
 ---
 
@@ -956,8 +984,8 @@ for k in keys:
 
 ```python
 new_key = client.api_keys.create(label="Production app key")
-print(new_key.key)      # "sk_live_..." — shown ONCE, save it now
-print(new_key.key_id)   # use this to revoke later
+print(new_key.plaintext_key)  # "sk_live_..." — shown ONCE, save it now
+print(new_key.key_id)         # use this to revoke later
 ```
 
 > **Important:** The full `key` value is only returned on creation. Store it securely — it cannot be retrieved again.
@@ -974,10 +1002,12 @@ client.api_keys.revoke("e3effcc2-...")
 |-------|------|-------------|
 | `key_id` | `str` | Key ID — use to revoke |
 | `label` | `str` | Key label |
-| `key` | `str` | Full key (only on creation) |
-| `key_prefix` | `str` | First characters of the key |
+| `plaintext_key` | `str` | Full key value (only returned on creation — store securely) |
+| `key_prefix` | `str` | First characters of the key (always visible) |
 | `status` | `str` | `active` / `revoked` |
 | `created_at` | `str` | Creation timestamp (ISO 8601) |
+| `last_used_at` | `str` | Last usage timestamp (ISO 8601) |
+| `usage_count` | `int` | Number of times this key has been used |
 
 ---
 
