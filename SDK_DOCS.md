@@ -736,7 +736,10 @@ client.tasks.delete("goal_20260322_...", project_id="a1b2c3d4-...")
 | `status` | `str` | `created` (queued) / `in_progress` / `done` |
 | `due_date` | `str` | Due date (ISO 8601 date) |
 | `project_id` | `str` | Owning project |
+| `recurring` | `bool` | Whether the task repeats |
+| `recurrence_interval` | `str` | Recurrence pattern when `recurring` is `true` (e.g. `"weekly"`) |
 | `created_at` | `str` | Creation timestamp |
+| `updated_at` | `str` | Last modification timestamp |
 
 ---
 
